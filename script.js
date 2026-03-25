@@ -1,3 +1,11 @@
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'a' || e.key === 'A'))) {
+        e.preventDefault();
+        return false;
+    }
+});
+
 const rawUrls = [
     "https://github.com/plathx/BlueStacks/releases/download/BlueStacks/bluestacks-5-22-125-1001.exe",
     "https://github.com/plathx/BlueStacks/releases/download/BlueStacks/bluestacks-5-22-130-2003.exe",
@@ -174,20 +182,92 @@ function switchTab(tab) {
     const btn4 = document.getElementById('tab-bs4');
     const content5 = document.getElementById('content-bs5');
     const content4 = document.getElementById('content-bs4');
+
     const activeBtnClass = "w-full text-left px-5 py-4 rounded-2xl font-bold transition-all duration-300 flex items-center gap-3 shadow-md bg-gradient-to-r from-lavender-100 to-white dark:from-gray-800 dark:to-navy-800 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-500/50 relative overflow-hidden group";
     const inactiveBtnClass = "w-full text-left px-5 py-4 rounded-2xl font-bold transition-all duration-300 flex items-center gap-3 text-gray-500 dark:text-gray-400 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:text-purple-700 dark:hover:text-purple-300 border border-transparent hover:border-purple-200 dark:hover:border-gray-700 group relative overflow-hidden";
-    const activeBadgeHTML = (num) => `<div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent dark:from-purple-500/20"></div><span class="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-purple-600 dark:bg-purple-500 text-white text-sm shadow-sm">${num}</span><span class="relative z-10">App Player ${num}</span>`;
-    const inactiveBadgeHTML = (num) => `<span class="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors">${num}</span><span class="relative z-10">App Player ${num}</span>`;
+    
+    const activeBadge = (num) => `<div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent dark:from-purple-500/20"></div><span class="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-purple-600 dark:bg-purple-500 text-white text-sm shadow-sm">${num}</span><span class="relative z-10">App Player ${num}</span>`;
+    const inactiveBadge = (num) => `<span class="relative z-10 flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors">${num}</span><span class="relative z-10">App Player ${num}</span>`;
 
     content5.classList.add('hidden');
     content4.classList.add('hidden');
+
     if (tab === 'bs5') {
-        btn5.className = activeBtnClass; btn5.innerHTML = activeBadgeHTML(5);
-        btn4.className = inactiveBtnClass; btn4.innerHTML = inactiveBadgeHTML(4);
+        btn5.className = activeBtnClass; btn5.innerHTML = activeBadge(5);
+        btn4.className = inactiveBtnClass; btn4.innerHTML = inactiveBadge(4);
         content5.classList.remove('hidden');
     } else {
-        btn4.className = activeBtnClass; btn4.innerHTML = activeBadgeHTML(4);
-        btn5.className = inactiveBtnClass; btn5.innerHTML = inactiveBadgeHTML(5);
+        btn4.className = activeBtnClass; btn4.innerHTML = activeBadge(4);
+        btn5.className = inactiveBtnClass; btn5.innerHTML = inactiveBadge(5);
         content4.classList.remove('hidden');
     }
 }
+
+const snake = document.getElementById("snake");
+const segmentCount = 25;
+const segments = [];
+
+for (let i = 0; i < segmentCount; i++) {
+    const segment = document.createElement("div");
+    segment.classList.add("snake-segment");
+    if (i === 0) {
+        segment.classList.add("head");
+        const leftEye = document.createElement("div");
+        leftEye.classList.add("eye", "left");
+        const leftPupil = document.createElement("div");
+        leftPupil.classList.add("pupil");
+        leftEye.appendChild(leftPupil);
+        segment.appendChild(leftEye);
+
+        const rightEye = document.createElement("div");
+        rightEye.classList.add("eye", "right");
+        const rightPupil = document.createElement("div");
+        rightPupil.classList.add("pupil");
+        rightEye.appendChild(rightPupil);
+        segment.appendChild(rightEye);
+    }
+    snake.appendChild(segment);
+    segments.push({
+        element: segment,
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+    });
+}
+
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+
+document.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+function animateSnake() {
+    const head = segments[0];
+    head.x += (mouseX - head.x) * 0.2;
+    head.y += (mouseY - head.y) * 0.2;
+    head.element.style.left = (head.x - 30) + "px";
+    head.element.style.top = (head.y - 20) + "px";
+
+    for (let i = 1; i < segments.length; i++) {
+        const prev = segments[i - 1];
+        const curr = segments[i];
+
+        const dx = prev.x - curr.x;
+        const dy = prev.y - curr.y;
+        const angle = Math.atan2(dy, dx);
+        const segmentLength = 15;
+
+        curr.x = prev.x - Math.cos(angle) * segmentLength;
+        curr.y = prev.y - Math.sin(angle) * segmentLength;
+
+        const size = 40 - i * 1.2;
+        curr.element.style.width = `${Math.max(size, 10)}px`;
+        curr.element.style.height = `${Math.max(size, 10)}px`;
+        curr.element.style.left = (curr.x - size / 2) + "px";
+        curr.element.style.top = (curr.y - size / 2) + "px";
+    }
+    requestAnimationFrame(animateSnake);
+}
+
+animateSnake();
